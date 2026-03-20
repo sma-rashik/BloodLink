@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '../firebase';
 import { Trash2, ShieldAlert } from 'lucide-react';
 
 const AdminPanel = () => {
    const [users, setUsers] = useState([]);
    const [posts, setPosts] = useState([]);
 
+   const [isAuthorized, setIsAuthorized] = useState(false);
+   const [loadingAuth, setLoadingAuth] = useState(true);
+
    useEffect(() => {
+      // Check Auth
+      const unsubAuth = onAuthStateChanged(auth, (user) => {
+         if (user && user.email === 'smarashik00@gmail.com') {
+            setIsAuthorized(true);
+         } else {
+            setIsAuthorized(false);
+         }
+         setLoadingAuth(false);
+      });
+
       // Fetch Users
       const unsubUsers = onSnapshot(collection(db, 'users'), sn => {
          setUsers(sn.docs.map(d => ({id: d.id, ...d.data()})));
@@ -17,6 +31,7 @@ const AdminPanel = () => {
          setPosts(sn.docs.map(d => ({id: d.id, ...d.data()})));
       });
       return () => {
+         unsubAuth();
          unsubUsers();
          unsubPosts();
       }
@@ -41,6 +56,22 @@ const AdminPanel = () => {
          }
       }
    };
+
+   if (loadingAuth) {
+      return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 text-gray-500">Checking authorization...</div>;
+   }
+
+   if (!isAuthorized) {
+      return (
+         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-950 p-4 text-center transition-colors">
+            <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Access Denied!</h1>
+            <p className="text-gray-500 mt-2">Only the admin (smarashik00@gmail.com) can view this page.</p>
+            <p className="text-xs text-gray-400 mt-1">Make sure you are logged in with the correct Google account.</p>
+            <a href="/" className="mt-6 px-6 py-2 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-md transition-colors">Go back Home</a>
+         </div>
+      );
+   }
 
    return (
      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 p-4 sm:p-8 transition-colors">
