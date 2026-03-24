@@ -30,8 +30,7 @@ const MapModal = ({ onClose, donors, userLocation }) => {
             <p className="text-sm text-gray-500">Live map view of active donors</p>
           </div>
           <button 
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+            onClick={onClose} className="p-2 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -54,8 +53,7 @@ const MapModal = ({ onClose, donors, userLocation }) => {
                     </div>
                     <div className="text-xs text-gray-500 mb-3">{donor.address}</div>
                     <a 
-                      href={`tel:${donor.phone}`} 
-                      className="block w-full text-center bg-red-600 text-white font-semibold rounded-lg py-2 px-3 text-sm hover:bg-red-700 transition shadow-sm"
+                      href={`tel:${donor.phone}`} className="block w-full text-center bg-red-600 text-white font-semibold rounded-lg py-2 px-3 text-sm hover:bg-red-700 transition shadow-sm"
                     >
                       Call Now
                     </a>

@@ -70,8 +70,7 @@ const Login = () => {
             onClick={onGoogleSignIn}
             fullWidth 
             type="button" 
-            variant="primary" 
-            className="py-4 text-lg shadow-red-200 flex items-center justify-center gap-3 bg-white border-2 border-gray-200 !text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-gray-100 transition-all font-semibold" 
+            variant="primary" className="py-4 text-lg shadow-red-200 flex items-center justify-center gap-3 bg-white border-2 border-gray-200 !text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-gray-100 transition-all font-semibold" 
             disabled={loading}
           >
             <svg viewBox="0 0 24 24" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
