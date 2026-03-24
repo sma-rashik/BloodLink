@@ -393,7 +393,7 @@ const Home = () => {
                              </span>
                           ) : !donor.isEligible ? (
                              <span className="text-red-500 flex items-center gap-1.5">
-                               <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div> Unavailable <span className="text-red-400 font-normal ml-0.5">(Somoy Hoyni)</span>
+                               <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div> Unavailable <span className="text-red-400 font-normal ml-0.5">(Not Time Yet)</span>
                              </span>
                           ) : (
                              <span className="text-gray-500 flex items-center gap-1.5">
