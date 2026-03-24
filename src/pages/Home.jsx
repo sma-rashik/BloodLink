@@ -76,12 +76,19 @@ const Home = () => {
       const donorsList = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        // Only fetch users who are available and have coordinates
-        if (data.isAvailable && data.coordinates && docSnap.id !== currentUser?.uid) {
+        // Fetch users who have coordinates (we want to show both available and unavailable now)
+        if (data.coordinates && docSnap.id !== currentUser?.uid) {
           
           let dist = '?';
           if (userLocation && userLocation.length === 2 && data.coordinates.length === 2) {
              dist = calculateDistance(userLocation[0], userLocation[1], data.coordinates[0], data.coordinates[1]);
+          }
+
+          let isEligible = true;
+          if (data.lastDonation) {
+             const diffTime = new Date() - new Date(data.lastDonation);
+             const diffDays = diffTime / (1000 * 60 * 60 * 24);
+             isEligible = diffDays > 90;
           }
 
           donorsList.push({
@@ -91,7 +98,9 @@ const Home = () => {
             distance: dist, 
             phone: data.phone,
             address: data.address,
-            coordinates: data.coordinates
+            coordinates: data.coordinates,
+            isAvailable: data.isAvailable !== false, // default true if missing
+            isEligible: isEligible
           });
         }
       });
@@ -377,9 +386,20 @@ const Home = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-900 text-sm">{donor.name}</h4>
-                        <div className="flex items-center text-xs text-gray-500 mt-1">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {donor.distance} km away
+                        <div className="flex items-center text-xs mt-1 font-semibold">
+                          {donor.isAvailable && donor.isEligible ? (
+                             <span className="text-green-600 flex items-center gap-1.5">
+                               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div> Available
+                             </span>
+                          ) : !donor.isEligible ? (
+                             <span className="text-red-500 flex items-center gap-1.5">
+                               <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div> Unavailable <span className="text-red-400 font-normal ml-0.5">(Somoy Hoyni)</span>
+                             </span>
+                          ) : (
+                             <span className="text-gray-500 flex items-center gap-1.5">
+                               <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div> Unavailable
+                             </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -404,7 +424,7 @@ const Home = () => {
                       <div className="space-y-3 text-sm text-gray-700 font-medium bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm">
                           <p className="flex items-start gap-2 text-gray-600">
                             <HouseIcon className="w-4 h-4 mt-0.5 shrink-0" />
-                            {donor.address}
+                            {donor.address} <span className="text-gray-400 ml-1">({donor.distance} km away)</span>
                           </p>
                       </div>
 
