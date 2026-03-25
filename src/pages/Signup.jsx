@@ -162,8 +162,11 @@ const Signup = () => {
              <div className="relative">
                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                <input 
-                  type="date" 
+                  type="text" 
                   name="lastDonation" 
+                  placeholder="Last Donation Date"
+                  onFocus={(e) => e.target.type = 'date'}
+                  onBlur={(e) => { if(!e.target.value) e.target.type = 'text' }}
                   value={formData.lastDonation} 
                   onChange={handleChange}
                   max={new Date().toISOString().split('T')[0]} className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 text-gray-500 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition-all text-xs sm:text-sm" 
