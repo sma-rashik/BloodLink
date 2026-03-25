@@ -154,7 +154,7 @@ const Home = () => {
         <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-red-600 to-rose-500 text-transparent bg-clip-text flex items-center gap-1.5">
              <Droplet className="w-5 h-5 fill-red-600 text-red-600" />
-             BloodLink
+             ReDrop
           </h1>
           <div className="flex gap-1 items-center">
             <button 
@@ -434,7 +434,7 @@ const Home = () => {
                              <Phone className="w-4 h-4 text-gray-600" /> Call Native
                            </a>
                            <a 
-                             href={`https://wa.me/${donor.phone.replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(donor.name)},%20I%20found%20you%20on%20BloodLink.%20I%20have%20an%20urgent%20need%20for%20${encodeURIComponent(donor.group)}%20blood.`} 
+                             href={`https://wa.me/${donor.phone.replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(donor.name)},%20I%20found%20you%20on%20ReDrop.%20I%20have%20an%20urgent%20need%20for%20${encodeURIComponent(donor.group)}%20blood.`} 
                              target="_blank" 
                              rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 p-3 rounded-xl border border-[#25D366]/30 transition-colors font-bold text-[#128C7E]"
                             >

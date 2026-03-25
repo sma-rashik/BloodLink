@@ -64,7 +64,7 @@ const Login = () => {
           <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <Droplet className="text-red-600 w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">BloodLink</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">ReDrop</h1>
           <p className="text-gray-500 text-sm">Every drop counts. Save a life today.</p>
         </div>
 

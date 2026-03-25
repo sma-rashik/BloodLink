@@ -80,7 +80,7 @@ const AdminPanel = () => {
                <ShieldAlert className="w-8 h-8 text-red-600" />
                <div>
                   <h1 className="text-2xl font-bold text-gray-900">Hidden Admin Dashboard</h1>
-                  <p className="text-sm text-gray-500">Manage all BloodLink users and posts</p>
+                  <p className="text-sm text-gray-500">Manage all ReDrop users and posts</p>
                </div>
            </header>
 

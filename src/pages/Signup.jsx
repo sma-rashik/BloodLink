@@ -91,7 +91,7 @@ const Signup = () => {
             <Droplet className="text-red-600 w-6 h-6" />
           </div>
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Create Account</h1>
-          <p className="text-gray-500 text-sm">Join BloodLink and start saving lives.</p>
+          <p className="text-gray-500 text-sm">Join ReDrop and start saving lives.</p>
         </div>
 
         {error && (
