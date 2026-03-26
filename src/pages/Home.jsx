@@ -155,9 +155,9 @@ const Home = () => {
       
       {/* App Bar */}
       <header className="bg-white/80 backdrop-blur-xl shadow-sm shadow-red-100/50 border-b border-red-50 sticky top-0 z-20">
-        <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-             <img src="/logo.png" className="h-10 w-auto object-contain drop-shadow-sm" alt="ReDrop Logo" />
+        <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center overflow-hidden">
+          <div className="flex items-center h-10 w-32 relative">
+             <img src="/logo.png" className="absolute top-1/2 left-0 -translate-y-1/2 h-28 w-auto object-contain mix-blend-multiply" alt="ReDrop Logo" />
           </div>
           <div className="flex gap-1 items-center">
             <button 

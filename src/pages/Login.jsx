@@ -73,8 +73,10 @@ const Login = () => {
         
         {/* Header Section */}
         <div className="text-center space-y-2 flex flex-col items-center">
-          <img src="/logo.png" className="w-40 h-40 object-contain drop-shadow-sm" alt="ReDrop Logo" />
-          <p className="text-gray-500 text-sm font-medium">Every drop counts. Save a life today.</p>
+          <div className="relative w-full h-32 flex justify-center items-center overflow-visible mb-2">
+             <img src="/logo.png" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-auto object-contain drop-shadow-sm mix-blend-multiply" alt="ReDrop Logo" />
+          </div>
+          <p className="text-gray-500 text-sm font-medium z-10 relative">Every drop counts. Save a life today.</p>
         </div>
 
         {error && (

@@ -101,8 +101,10 @@ const Signup = () => {
         
         {/* Header Section */}
         <div className="text-center space-y-2 flex flex-col items-center mb-6">
-          <img src="/logo.png" className="w-32 h-32 object-contain drop-shadow-sm" alt="ReDrop Logo" />
-          <h2 className="text-xl font-bold text-gray-800 tracking-tight">Create Account</h2>
+          <div className="relative w-full h-24 flex justify-center items-center overflow-visible mb-2">
+             <img src="/logo.png" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-56 w-auto object-contain drop-shadow-sm mix-blend-multiply" alt="ReDrop Logo" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 tracking-tight z-10 relative">Create Account</h2>
         </div>
 
         {error && (
