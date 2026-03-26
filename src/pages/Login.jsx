@@ -72,10 +72,8 @@ const Login = () => {
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl p-8 space-y-8 border border-red-100 relative">
         
         {/* Header Section */}
-        <div className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <Droplet className="text-red-600 w-8 h-8" />
-          </div>
+        <div className="text-center space-y-4 flex flex-col items-center">
+          <img src="/logo.png" className="w-20 h-20 object-contain drop-shadow-sm mb-2" alt="ReDrop Logo" />
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">ReDrop</h1>
           <p className="text-gray-500 text-sm">Every drop counts. Save a life today.</p>
         </div>

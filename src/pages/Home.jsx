@@ -7,23 +7,7 @@ import BloodGroupButton from '../components/BloodGroupButton';
 import Button from '../components/Button';
 import ProfileModal from '../components/ProfileModal';
 import UrgentRequestModal from '../components/UrgentRequestModal';
-
-// Leaflet Map Imports
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
+import MapModal from '../components/MapModal';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -31,6 +15,7 @@ const Home = () => {
   const [activeDonorId, setActiveDonorId] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isUrgentModalOpen, setIsUrgentModalOpen] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const [searchedGroup, setSearchedGroup] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [maxDistance, setMaxDistance] = useState(15); 
@@ -172,7 +157,7 @@ const Home = () => {
       <header className="bg-white/80 backdrop-blur-xl shadow-sm shadow-red-100/50 border-b border-red-50 sticky top-0 z-20">
         <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-red-600 to-rose-500 text-transparent bg-clip-text flex items-center gap-1.5">
-             <Droplet className="w-5 h-5 fill-red-600 text-red-600" />
+             <img src="/logo.png" className="w-6 h-6 object-contain drop-shadow" alt="ReDrop" />
              ReDrop
           </h1>
           <div className="flex gap-1 items-center">
@@ -336,46 +321,18 @@ const Home = () => {
             </h3>
           </div>
           
-          {/* Embedded Live Tracking Map */}
+          {/* Map Modal Trigger Built-in */}
           {isProfileComplete && (
-             <div className="w-full h-[300px] rounded-2xl overflow-hidden border border-gray-200 shadow-inner relative z-0">
-               <MapContainer 
-                  center={userLocation || [23.8103, 90.4125]} 
-                  zoom={12} 
-                  scrollWheelZoom={false} 
-                  className="h-full w-full z-0 font-sans"
+            <div className="mb-6 animate-in fade-in duration-300">
+               <Button 
+                 fullWidth 
+                 variant="secondary" 
+                 onClick={() => setIsMapOpen(true)}
+                 className="flex items-center justify-center gap-2 py-4 bg-red-50 hover:bg-red-100 text-red-700 font-bold border-2 border-red-200 shadow-sm"
                >
-                 <TileLayer
-                   attribution='&copy; OpenStreetMap'
-                   url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                 />
-                 {displayedDonors.map(donor => donor.coordinates && donor.coordinates.length === 2 && (
-                   <Marker key={donor.id} position={donor.coordinates}>
-                     <Popup className="rounded-2xl shadow-lg border-0 overflow-hidden font-sans z-50">
-                        <div className="min-w-[150px] p-0.5">
-                          <div className="flex justify-between items-center mb-1 gap-3">
-                            <div className="font-bold text-gray-900 text-sm leading-tight">{donor.name}</div>
-                            <div className="bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded text-[10px] shrink-0">{donor.group}</div>
-                          </div>
-                          <div className="text-[10px] text-gray-500 mb-2 leading-tight">
-                            {donor.address} <span className="font-bold text-gray-700">({donor.distance} km)</span>
-                          </div>
-                          <div className="flex gap-1.5 w-full">
-                             <a href={`tel:+880${donor.phone.replace(/\D/g, '').replace(/^(?:88)?0?/, '')}`} className="flex-1 text-center bg-gray-100 text-gray-700 font-bold rounded-lg py-1.5 px-2 text-[10px] hover:bg-gray-200 transition">Call</a>
-                             <a 
-                               href={`https://wa.me/880${donor.phone.replace(/\D/g, '').replace(/^(?:88)?0?/, '')}?text=Hi%20${encodeURIComponent(donor.name)},%20I%20found%20you%20on%20ReDrop.%20I%20have%20an%20urgent%20need%20for%20${encodeURIComponent(donor.group)}%20blood.`}
-                               target="_blank" rel="noopener noreferrer" 
-                               className="flex-1 text-center bg-[#25D366]/10 text-[#128C7E] font-bold border border-[#25D366]/30 rounded-lg py-1.5 px-2 text-[10px] hover:bg-[#25D366]/20 transition"
-                             >
-                               WhatsApp
-                             </a>
-                          </div>
-                        </div>
-                     </Popup>
-                   </Marker>
-                 ))}
-               </MapContainer>
-             </div>
+                 <MapPin className="w-5 h-5" /> View Live Donor Map
+               </Button>
+            </div>
           )}
 
           <div className="relative mt-4">
@@ -528,6 +485,15 @@ const Home = () => {
             setIsProfileOpen(false);
             loadProfile(); // Reload the profile to check if phone was updated
           }} 
+        />
+      )}
+
+      {/* Full Screen Map Modal */}
+      {isMapOpen && (
+        <MapModal 
+          onClose={() => setIsMapOpen(false)}
+          currentUser={currentUser}
+          displayedDonors={displayedDonors}
         />
       )}
     </div>

@@ -100,10 +100,8 @@ const Signup = () => {
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 space-y-6 border border-red-100 relative">
         
         {/* Header Section */}
-        <div className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
-            <Droplet className="text-red-600 w-6 h-6" />
-          </div>
+        <div className="text-center space-y-2 flex flex-col items-center">
+          <img src="/logo.png" className="w-16 h-16 object-contain drop-shadow-sm mb-1" alt="ReDrop Logo" />
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Create Account</h1>
           <p className="text-gray-500 text-sm">Join ReDrop and start saving lives.</p>
         </div>
