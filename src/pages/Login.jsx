@@ -32,8 +32,14 @@ const Login = () => {
     }
 
     try {
-      // Use our dummy email strategy
-      const dummyEmail = `${formData.phone}@bloodlink.app`;
+      // Use our dummy email strategy (prepended 0 for backwards compatibility)
+      const cleanPhone = formData.phone.replace(/^(?:\+?88)?0?/, '');
+      if (cleanPhone.length !== 10) {
+        setError("Phone number must be exactly 10 digits (e.g. 1712345678)");
+        setLoading(false);
+        return;
+      }
+      const dummyEmail = `0${cleanPhone}@bloodlink.app`;
       const userCredential = await signInWithEmailAndPassword(auth, dummyEmail, formData.password);
       const user = userCredential.user;
 
@@ -83,14 +89,20 @@ const Login = () => {
         {/* Action Section */}
         <form onSubmit={onLogin} className="pt-2 space-y-4">
           <div>
-            <div className="relative">
-               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-xl focus-within:ring-2 focus-within:ring-red-500 transition-all overflow-hidden text-sm">
+               <div className="pl-4 pr-3 py-3 bg-gray-100 text-gray-600 font-bold border-r border-gray-200 flex items-center justify-center shrink-0">
+                 +880
+               </div>
                <input 
                   type="tel" 
                   name="phone" 
-                  placeholder="Phone Number"
+                  placeholder="1XXXXXXXXX (10 digits)"
                   value={formData.phone} 
-                  onChange={handleChange} className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition-all text-sm" 
+                  onChange={(e) => {
+                     const val = e.target.value.replace(/\D/g, '');
+                     if (val.length <= 10) handleChange({ target: { name: 'phone', value: val } });
+                  }} 
+                  className="w-full pl-3 pr-4 py-3 bg-transparent text-gray-900 outline-none font-semibold tracking-wide" 
                />
             </div>
           </div>

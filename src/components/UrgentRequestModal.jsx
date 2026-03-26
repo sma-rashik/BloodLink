@@ -81,12 +81,22 @@ const UrgentRequestModal = ({ onClose, currentUser }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone *</label>
-            <input 
-              type="tel" 
-              value={phone} 
-              onChange={(e) => setPhone(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition-all" 
-              required
-            />
+            <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-xl focus-within:ring-2 focus-within:ring-red-500 transition-all overflow-hidden text-sm">
+               <div className="pl-4 pr-3 py-3 bg-gray-100 text-gray-600 font-bold border-r border-gray-200 flex items-center justify-center shrink-0">
+                 +880
+               </div>
+               <input 
+                  type="tel" 
+                  value={phone.replace(/\D/g, '').replace(/^(?:88)?0?/, '')} 
+                  onChange={(e) => {
+                     const val = e.target.value.replace(/\D/g, '');
+                     setPhone(`+880${val.slice(0, 10)}`);
+                  }} 
+                  className="w-full pl-3 pr-4 py-3 bg-transparent text-gray-900 outline-none font-semibold tracking-wide" 
+                  required
+                  placeholder="1XXXXXXXXX (10 digits)"
+               />
+            </div>
           </div>
 
           <div>
