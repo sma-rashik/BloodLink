@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Droplet, User, Phone, MapPin, Calendar, Lock } from 'lucide-react';
 import Button from '../components/Button';
