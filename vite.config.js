@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'logo.png'],
       manifest: {
-        name: 'BloodLink - Real-time Donation',
-        short_name: 'BloodLink',
+        name: 'ReDrop - Real-time Blood Donation',
+        short_name: 'ReDrop',
         description: 'Find and connect with blood donors in real-time.',
         theme_color: '#dc2626',
         background_color: '#f9fafb',
