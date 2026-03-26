@@ -317,7 +317,7 @@ const Home = () => {
                                 Delete
                              </button>
                           ) : (<span></span>)}
-                          <a href={`tel:${feed.phone}`} className="text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors flex items-center gap-1">
+                          <a href={`tel:+880${feed.phone.replace(/\D/g, '').replace(/^(?:88)?0?/, '')}`} className="text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors flex items-center gap-1">
                              <Phone className="w-3 h-3"/> Contact
                           </a>
                       </div>
@@ -361,9 +361,9 @@ const Home = () => {
                             {donor.address} <span className="font-bold text-gray-700">({donor.distance} km)</span>
                           </div>
                           <div className="flex gap-1.5 w-full">
-                             <a href={`tel:${donor.phone}`} className="flex-1 text-center bg-gray-100 text-gray-700 font-bold rounded-lg py-1.5 px-2 text-[10px] hover:bg-gray-200 transition">Call</a>
+                             <a href={`tel:+880${donor.phone.replace(/\D/g, '').replace(/^(?:88)?0?/, '')}`} className="flex-1 text-center bg-gray-100 text-gray-700 font-bold rounded-lg py-1.5 px-2 text-[10px] hover:bg-gray-200 transition">Call</a>
                              <a 
-                               href={`https://wa.me/${donor.phone.replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(donor.name)},%20I%20found%20you%20on%20ReDrop.%20I%20have%20an%20urgent%20need%20for%20${encodeURIComponent(donor.group)}%20blood.`}
+                               href={`https://wa.me/880${donor.phone.replace(/\D/g, '').replace(/^(?:88)?0?/, '')}?text=Hi%20${encodeURIComponent(donor.name)},%20I%20found%20you%20on%20ReDrop.%20I%20have%20an%20urgent%20need%20for%20${encodeURIComponent(donor.group)}%20blood.`}
                                target="_blank" rel="noopener noreferrer" 
                                className="flex-1 text-center bg-[#25D366]/10 text-[#128C7E] font-bold border border-[#25D366]/30 rounded-lg py-1.5 px-2 text-[10px] hover:bg-[#25D366]/20 transition"
                              >
@@ -486,11 +486,11 @@ const Home = () => {
 
                       {/* Action Buttons */}
                       <div className="grid grid-cols-2 gap-3 mt-3">
-                           <a href={`tel:${donor.phone}`} className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 transition-colors font-bold text-gray-700 shadow-sm">
+                           <a href={`tel:+880${donor.phone.replace(/\D/g, '').replace(/^(?:88)?0?/, '')}`} className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 transition-colors font-bold text-gray-700 shadow-sm">
                              <Phone className="w-4 h-4 text-gray-600" /> Call Directly
                            </a>
                            <a 
-                             href={`https://wa.me/${donor.phone.replace(/\D/g, '')}?text=Hi%20${encodeURIComponent(donor.name)},%20I%20found%20you%20on%20ReDrop.%20I%20have%20an%20urgent%20need%20for%20${encodeURIComponent(donor.group)}%20blood.`} 
+                             href={`https://wa.me/880${donor.phone.replace(/\D/g, '').replace(/^(?:88)?0?/, '')}?text=Hi%20${encodeURIComponent(donor.name)},%20I%20found%20you%20on%20ReDrop.%20I%20have%20an%20urgent%20need%20for%20${encodeURIComponent(donor.group)}%20blood.`} 
                              target="_blank" 
                              rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 p-3 rounded-xl border border-[#25D366]/30 transition-colors font-bold text-[#128C7E] shadow-sm"
                             >
