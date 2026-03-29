@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, MapPin, Search, Phone, Home as HouseIcon, UserCircle, AlertTriangle, Clock, Droplet, HelpCircle } from 'lucide-react';
 import { collection, onSnapshot, doc, updateDoc, query, orderBy, limit, deleteDoc } from 'firebase/firestore';
 import { db, auth, messaging } from '../firebase';
@@ -140,7 +141,8 @@ const Home = () => {
             address: data.address,
             coordinates: activeCoords || [],
             isAvailable: data.isAvailable !== false,
-            isEligible: isEligible
+            isEligible: isEligible,
+            lastDonation: data.lastDonation || null
           });
       });
       donorsList.sort((a, b) => {
@@ -230,11 +232,11 @@ const Home = () => {
     currentUser.group?.trim();
 
   return (
-    <div className="min-h-screen bg-[#fffafa] text-red-950 pb-20 font-sans selection:bg-red-200 selection:text-red-900 transition-colors duration-300">
+    <div className="min-h-screen bg-[#fffafa] text-red-950 pb-48 font-sans selection:bg-red-200 selection:text-red-900 transition-colors duration-300">
       
       {/* App Bar */}
       <header className="bg-white/80 backdrop-blur-xl shadow-sm shadow-red-100/50 border-b border-red-50 sticky top-0 z-20">
-        <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center overflow-hidden">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center overflow-hidden">
           <div className="flex items-center h-10 w-32 relative">
              <img src="/logo.png" className="absolute top-1/2 left-0 -translate-y-1/2 h-28 w-auto object-contain mix-blend-multiply" alt="ReDrop Logo" />
           </div>
@@ -281,315 +283,323 @@ const Home = () => {
         )}
       </header>
 
-      <main className="max-w-md mx-auto px-4 py-6 space-y-8">
+      <main className="max-w-5xl mx-auto px-4 py-8">
         
-        {/* Live Urgent Feed - Moved ABOVE Request Section */}
-        {isProfileComplete && (
-          <section className="bg-white/90 backdrop-blur-xl rounded-3xl p-5 shadow-sm shadow-red-100/50 border border-red-100 relative overflow-hidden transition-colors">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -z-0 opacity-50"></div>
-            
-            <div className="flex justify-between items-center mb-4 relative z-10">
-              <div className="flex items-center gap-2">
-                 <div className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                 </div>
-                 <h3 className="text-base font-bold text-gray-900">Live feed</h3>
-              </div>
-              <button 
-                onClick={() => setIsUrgentModalOpen(true)} className="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-full shadow-sm transition-colors"
-              >
-                + Post Need
-              </button>
-            </div>
-
-            <div className="space-y-3 relative z-10 max-h-64 overflow-y-auto pr-1">
-               {urgentFeed.length === 0 ? (
-                 <p className="text-center text-sm text-red-800 py-4 bg-red-50/50 rounded-xl border border-dashed border-red-200">No urgent requests right now. Alhamdullilah!</p>
-               ) : (
-                 urgentFeed.map(feed => (
-                   <div key={feed.id} className="bg-white rounded-xl p-3 border border-red-100 shadow-sm shadow-red-50 hover:border-red-300 hover:shadow-md hover:shadow-red-100 transition-all">
-                      <div className="flex justify-between items-start mb-2">
-                         <div className="flex items-center gap-2">
-                            <span className="bg-red-100 text-red-700 font-extrabold text-xs px-2 py-0.5 rounded-md border border-red-200">{feed.bloodGroup}</span>
-                            <span className="text-xs font-semibold text-gray-700">{feed.name}</span>
-                         </div>
-                         <span className="text-[10px] text-gray-400 flex items-center gap-1"><Clock className="w-3 h-3"/> {feed.timestamp?.toDate() ? (() => {
-                             const diffMs = new Date() - feed.timestamp.toDate();
-                             const diffMins = Math.floor(diffMs / 60000);
-                             if (diffMins < 60) return `${diffMins}m ago`;
-                             const diffHrs = Math.floor(diffMins / 60);
-                             if (diffHrs < 24) return `${diffHrs}h ago`;
-                             return `${Math.floor(diffHrs/24)}d ago`;
-                         })() : 'just now'}</span>
-                      </div>
-                      <p className="text-xs font-medium text-gray-800 flex items-start gap-1">
-                         <MapPin className="w-3 h-3 mt-0.5 text-gray-400 shrink-0"/> {feed.location}
-                      </p>
-                      {feed.note && <p className="text-xs text-gray-500 mt-1 italic w-full truncate">"{feed.note}"</p>}
-                      
-                      <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center">
-                          {currentUser?.uid === feed.postedBy ? (
-                             <button
-                                onClick={async () => {
-                                   if(window.confirm("Are you sure you want to delete this urgent request?")) {
-                                      try {
-                                         await deleteDoc(doc(db, 'urgent_requests', feed.id));
-                                      } catch(e) {
-                                         alert('Failed to delete post');
-                                      }
-                                   }
-                                }} className="text-xs font-bold text-gray-500 hover:text-red-600 transition-colors"
-                             >
-                                Delete
-                             </button>
-                          ) : (<span></span>)}
-                          <a href={`tel:+880${String(feed.phone || '').replace(/\D/g, '').replace(/^(?:88)?0?/, '')}`} className="text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors flex items-center gap-1">
-                             <Phone className="w-3 h-3"/> Contact
-                          </a>
-                      </div>
-                   </div>
-                 ))
-               )}
-            </div>
-          </section>
-        )}
-
-        {/* Request Section */}
-        <section className="space-y-4">
-          <div className="flex justify-between items-end">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Request Blood</h2>
-              <p className="text-gray-500 text-sm mt-1">Select the blood group you need to immediately find nearby donors</p>
-            </div>
-          </div>
+        {/* Desktop Grid Layout Wrapper */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          <div className="grid grid-cols-4 gap-3 sm:gap-4 mt-2">
-            {bloodGroups.map((group) => (
-              <BloodGroupButton
-                key={group}
-                group={group}
-                selected={searchedGroup === group}
-                onClick={(group) => {
-                  setSelectedGroup(group);
-                  setSearchedGroup(searchedGroup === group ? null : group); // Instantly search or toggle off
-                  setActiveDonorId(null);
-                  setVisibleCount(15);
-                  
-                  // Smoothly scroll down to the map/list section
-                  setTimeout(() => {
-                    window.scrollTo({
-                      top: document.body.scrollHeight,
-                      behavior: 'smooth'
-                    });
-                  }, 100);
-                }}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Nearby Donors Map & List Section */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 shadow-sm shadow-gray-200/50 border border-gray-100 space-y-6 relative z-0 transition-colors">
-          
-          {/* Filtering and Map controls placed ABOVE the list */}
-          <div className="pb-4 border-b border-gray-100 space-y-4">
-            <div className="flex justify-between items-center mb-1">
-              <h3 className="text-lg font-bold text-gray-900">
-                {searchedGroup ? `Live Tracking: ${searchedGroup} Donors` : 'Live Tracking Map'}
-              </h3>
-            </div>
+          {/* Left Column (Main Content & Filters on Mobile) */}
+          <div className="lg:col-span-12 xl:col-span-8 space-y-8 order-1">
             
-            {/* Map Modal Trigger Built-in */}
+            {/* Live Urgent Feed - Mobile Mode */}
             {isProfileComplete && (
-              <div className="mb-4 animate-in fade-in duration-300">
-                 <Button 
-                   fullWidth 
-                   variant="secondary" 
-                   onClick={() => {
-                     if (!userLocation) {
-                        alert("অনুগ্রহ করে আপনার ডিভাইসের Location (GPS) পারমিশনটি অন করুন। তা নাহলে আমরা ডোনারের সঠিক দূরত্ব হিসেব করে ম্যাপে দেখাতে পারব না।");
-                        return;
-                     }
-                     setIsMapOpen(true);
-                   }}
-                   className="flex items-center justify-center gap-2 py-3.5 bg-red-50 hover:bg-red-100 text-red-700 font-bold border border-red-100 shadow-sm rounded-xl"
-                 >
-                   <MapPin className="w-5 h-5" /> View Live Map
-                 </Button>
-              </div>
-            )}
-
-            {/* Distance Filter Slider (Max 50km) */}
-            {userLocation && isProfileComplete && (
-              <div className="flex flex-col bg-white p-4 rounded-xl border border-gray-200 shadow-sm animate-in fade-in duration-300">
-                 <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-bold text-gray-700 flex items-center gap-1.5"><MapPin className="w-4 h-4 text-red-500"/> Radius Filter</span>
-                    <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">{maxDistance} km</span>
-                 </div>
-                 <input 
-                    type="range" 
-                    min="1" 
-                    max="50" 
-                    step="1"
-                    value={maxDistance} 
-                    onChange={(e) => setMaxDistance(parseFloat(e.target.value))} className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-600"
-                  />
-                  <div className="flex justify-between text-[10px] font-bold text-gray-400 mt-1 px-0.5">
-                     <span>1km</span>
-                     <span>50km Max</span>
+              <section className="xl:hidden bg-white/90 backdrop-blur-xl rounded-2xl p-5 shadow-sm shadow-red-100/50 border border-red-100 relative overflow-hidden transition-colors">
+                <div className="flex justify-between items-center mb-4 relative z-10">
+                  <div className="flex items-center gap-2">
+                     <div className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                     </div>
+                     <h3 className="text-base font-bold text-gray-900">Live Feed</h3>
                   </div>
-              </div>
-            )}
-          </div>
-
-          {/* Donors List */}
-          <div className="space-y-3 min-h-[150px]">
-            {!isProfileComplete ? (
-              <div className="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 animate-in fade-in duration-300">
-                <div className="mx-auto w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-3">
-                   <AlertTriangle className="text-gray-500 w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-1 text-sm">Features Locked</h3>
-                <p className="text-xs text-gray-500 mb-4 px-6">Complete your profile to see active donors nearby.</p>
-                <button 
-                  onClick={() => setIsProfileOpen(true)} className="mx-auto bg-gray-800 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-900 transition-colors shadow-sm text-xs"
-                >
-                  Setup Profile Now
-                </button>
-              </div>
-            ) : displayedDonors.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-6 text-center bg-gray-50 rounded-2xl border border-gray-100 animate-in fade-in">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                  <Search className="text-gray-400 w-5 h-5" />
-                </div>
-                <p className="text-gray-500 font-semibold text-sm">No donors found nearby.</p>
-                <button onClick={() => setIsUrgentModalOpen(true)} className="mt-3 bg-white text-red-600 text-xs font-bold py-2 px-4 rounded-lg border border-red-200 shadow-sm hover:bg-red-50 transition-colors">
-                  Post an Urgent Request
-                </button>
-              </div>
-            ) : (
-              <>
-              {displayedDonors.slice(0, visibleCount).map((donor) => (
-                <div key={donor.id} className="flex flex-col p-4 rounded-2xl bg-white hover:bg-gray-50 transition-all border border-gray-100 shadow-sm group">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center font-bold text-red-600 shrink-0">
-                        {donor.group}
-                      </div>
-                      <div className="flex flex-col">
-                        <h4 className="font-bold text-gray-900 text-sm leading-tight">{donor.name}</h4>
-                        <div className="flex items-center text-[10px] mt-1 font-semibold">
-                          {donor.isAvailable && donor.isEligible ? (
-                             <span className="text-green-600 flex items-center gap-1">
-                               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div> Available
-                             </span>
-                          ) : !donor.isEligible ? (
-                             <span className="text-orange-500 flex items-center gap-1">
-                               <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div> Recovery <span className="text-orange-400 font-normal ml-0.5">(&lt; 90d)</span>
-                             </span>
-                          ) : (
-                             <span className="text-gray-500 flex items-center gap-1">
-                               <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div> Unavailable
-                             </span>
-                          )}
-                        </div>
-                        
-                        {/* Location */}
-                        <p className="flex items-start gap-1 text-[11px] text-gray-500 font-medium mt-1.5">
-                          <HouseIcon className="w-3 h-3 mt-0.5 shrink-0 text-gray-400" />
-                          <span>{donor.address} {donor.distance !== '?' && <span className="text-gray-400 ml-0.5">({donor.distance} km)</span>}</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col gap-2 shrink-0">
-                       <a href={`tel:+880${String(donor.phone || '').replace(/\D/g, '').replace(/^(?:88)?0?/, '')}`} className="flex items-center justify-center gap-1.5 bg-white hover:bg-gray-50 py-1.5 px-3 rounded-lg border border-gray-200 transition-colors font-bold text-gray-700 shadow-sm text-[11px]">
-                         <Phone className="w-3 h-3 text-gray-600" /> Call
-                       </a>
-                       <a 
-                         href={`https://wa.me/880${String(donor.phone || '').replace(/\D/g, '').replace(/^(?:88)?0?/, '')}?text=Hi%20${encodeURIComponent(donor.name)},%20I%20found%20you%20on%20ReDrop.%20I%20have%20an%20urgent%20need%20for%20${encodeURIComponent(donor.group)}%20blood.`} 
-                         target="_blank" 
-                         rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 py-1.5 px-3 rounded-lg border border-[#25D366]/30 transition-colors font-bold text-[#128C7E] shadow-sm text-[11px]"
-                        >
-                         <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                         WhatsApp
-                       </a>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {visibleCount < displayedDonors.length && (
-                <div className="flex justify-center pt-2 pb-4">
                   <button 
-                    onClick={() => setVisibleCount(prev => prev + 15)} 
-                    className="bg-white hover:bg-red-50 text-red-600 border border-red-200 text-sm font-bold py-2.5 px-6 rounded-full shadow-sm transition-colors focus:ring-2 focus:ring-red-500 focus:outline-none"
+                    onClick={() => setIsUrgentModalOpen(true)} className="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-full shadow-sm transition-colors"
                   >
-                    See More ({displayedDonors.length - visibleCount} hidden)
+                    + Post Need
                   </button>
                 </div>
-              )}
-              </>
+
+                <div className="space-y-3 relative z-10 max-h-64 overflow-y-auto pr-1">
+                   {urgentFeed.length === 0 ? (
+                     <p className="text-center text-sm text-red-800 py-4 bg-red-50/50 rounded-xl border border-dashed border-red-200">No urgent requests right now.</p>
+                   ) : (
+                     urgentFeed.map(feed => (
+                       <div key={feed.id} className="bg-white rounded-xl p-3 border border-red-100 shadow-sm shadow-red-50 hover:border-red-300 hover:shadow-red-100 transition-all">
+                          <div className="flex justify-between items-start mb-2">
+                             <div className="flex items-center gap-2">
+                                <span className="bg-red-100 text-red-700 font-extrabold text-xs px-2 py-0.5 rounded-md border border-red-200">{feed.bloodGroup}</span>
+                                <span className="text-xs font-semibold text-gray-700">{feed.name}</span>
+                             </div>
+                             <span className="text-[10px] text-gray-400 flex items-center gap-1"><Clock className="w-3 h-3"/> {feed.timestamp?.toDate() ? (() => {
+                                 const diffMs = new Date() - feed.timestamp.toDate();
+                                 const diffMins = Math.floor(diffMs / 60000);
+                                 if (diffMins < 60) return `${diffMins}m ago`;
+                                 const diffHrs = Math.floor(diffMins / 60);
+                                 if (diffHrs < 24) return `${diffHrs}h ago`;
+                                 return `${Math.floor(diffHrs/24)}d ago`;
+                             })() : 'just now'}</span>
+                          </div>
+                          <p className="text-xs font-medium text-gray-800 flex items-start gap-1">
+                             <MapPin className="w-3 h-3 mt-0.5 text-gray-400 shrink-0"/> {feed.location}
+                          </p>
+                          <div className="mt-2 pt-2 border-t border-gray-100 flex justify-between items-center">
+                              {currentUser?.uid === feed.postedBy ? (
+                                 <button
+                                    onClick={async () => {
+                                       if(window.confirm("Are you sure?")) {
+                                          try { await deleteDoc(doc(db, 'urgent_requests', feed.id)); } catch(e) { alert('Error'); }
+                                       }
+                                    }} className="text-xs font-bold text-gray-500 hover:text-red-600 transition-colors"
+                                 >
+                                    Delete
+                                 </button>
+                              ) : (<span></span>)}
+                              <a href={`tel:+880${String(feed.phone || '').replace(/\D/g, '')}`} className="text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors flex items-center gap-1">
+                                 <Phone className="w-3 h-3"/> Contact
+                              </a>
+                          </div>
+                       </div>
+                     ))
+                   )}
+                </div>
+              </section>
             )}
+
+            {/* Request Section */}
+            <section className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Request Blood</h2>
+                  <p className="text-gray-500 text-sm mt-1">Select the blood group you need to immediately find nearby donors</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-3 sm:gap-4 mt-2">
+                {bloodGroups.map((group) => (
+                  <BloodGroupButton
+                    key={group}
+                    group={group}
+                    selected={searchedGroup === group}
+                    onClick={(group) => {
+                      setSelectedGroup(group);
+                      setSearchedGroup(searchedGroup === group ? null : group); 
+                      setActiveDonorId(null);
+                      setVisibleCount(15);
+                      setTimeout(() => {
+                        window.scrollTo({
+                          top: 400,
+                          behavior: 'smooth'
+                        });
+                      }, 100);
+                    }}
+                  />
+                ))}
+              </div>
+            </section>
+
+            {/* Map & List Section */}
+            <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 shadow-sm shadow-gray-200/50 border border-gray-100 space-y-6 relative z-0 transition-colors">
+              <div className="pb-4 border-b border-gray-100 space-y-4">
+                <div className="flex justify-between items-center mb-1">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {searchedGroup ? `Live Tracking: ${searchedGroup} Donors` : 'Live Tracking Map'}
+                  </h3>
+                </div>
+                
+                {isProfileComplete && (
+                  <div className="mb-4">
+                     <Button 
+                       fullWidth 
+                       variant="secondary" 
+                       onClick={() => {
+                         if (!userLocation) {
+                            alert("Location needed");
+                            return;
+                         }
+                         setIsMapOpen(true);
+                       }}
+                       className="flex items-center justify-center gap-2 py-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-100 shadow-sm rounded-xl active:scale-95 transition-all"
+                     >
+                       <MapPin className="w-5 h-5" /> View Live Map
+                     </Button>
+                  </div>
+                )}
+
+                {userLocation && isProfileComplete && (
+                  <div className="flex flex-col bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all group">
+                     <div className="flex justify-between items-center mb-4">
+                        <span className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-red-500"/> Radius Filter
+                        </span>
+                        <span className="text-xs font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full">{maxDistance} km</span>
+                     </div>
+                     <div className="relative px-1">
+                       <input 
+                          type="range" 
+                          min="1" 
+                          max="50" 
+                          step="1"
+                          value={maxDistance} 
+                          onChange={(e) => setMaxDistance(parseFloat(e.target.value))} 
+                          className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-red-600 focus:outline-none transition-all"
+                        />
+                        <div className="flex justify-between text-[11px] font-bold text-gray-400 mt-2 px-0.5">
+                           <span>1km</span>
+                           <span>50km Max</span>
+                        </div>
+                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Donors List with Framer Motion */}
+              <div className="space-y-3 min-h-[150px]">
+                {!isProfileComplete ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <h3 className="font-bold text-gray-900 mb-1 text-sm">Features Locked</h3>
+                    <p className="text-xs text-gray-500 mb-4 px-6">Complete your profile to see active donors nearby.</p>
+                    <button onClick={() => setIsProfileOpen(true)} className="mx-auto bg-gray-800 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-900 transition-colors shadow-sm text-xs">Setup Profile Now</button>
+                  </div>
+                ) : displayedDonors.length === 0 ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
+                    <div className="w-16 h-16 bg-red-50 text-red-400 rounded-full flex items-center justify-center mb-4">
+                      <Search className="w-8 h-8" />
+                    </div>
+                    <h4 className="text-gray-900 font-bold text-base mb-1">No donors found</h4>
+                    <p className="text-gray-500 font-medium text-xs mb-5 px-4">Try expanding the radius or posting a request.</p>
+                    <button onClick={() => setIsUrgentModalOpen(true)} className="bg-red-600 text-white text-xs font-bold py-3 px-8 rounded-xl hover:bg-red-700 active:scale-95 transition-all">Post an Urgent Request</button>
+                  </motion.div>
+                ) : (
+                  <AnimatePresence mode="popLayout">
+                    {displayedDonors.slice(0, visibleCount).map((donor, index) => (
+                      <motion.div 
+                        layout 
+                        key={donor.id} 
+                        initial={{ opacity: 0, scale: 0.95 }} 
+                        animate={{ opacity: 1, scale: 1 }} 
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                        className="flex flex-col p-4 rounded-2xl bg-white hover:bg-gray-50 transition-all border border-gray-100 shadow-sm group"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center font-bold text-red-600 shrink-0 border border-red-100">
+                              {donor.group}
+                            </div>
+                            <div className="flex flex-col">
+                              <h4 className="font-bold text-gray-900 text-sm leading-tight">{donor.name}</h4>
+                              <div className="flex items-center text-[10px] mt-1 font-bold">
+                                {donor.isAvailable && donor.isEligible ? (
+                                   <span className="text-green-600 flex items-center gap-1.5 bg-green-50 px-2.5 py-1 rounded-full border border-green-100/50">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div> Available
+                                   </span>
+                                ) : (
+                                   <span className="text-orange-600 flex items-center gap-1.5 bg-orange-50 px-2.5 py-1 rounded-full border border-orange-100/50">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div> Recovery 
+                                       {!donor.isEligible && donor.lastDonation && (
+                                         <span className="text-orange-400 font-normal ml-0.5 text-[10px] tracking-tight whitespace-nowrap">
+                                            {"(< 90d)"}
+                                         </span>
+                                      )}
+                                   </span>
+                                )}
+                              </div>
+                              <p className="flex items-start gap-1 text-[11px] text-gray-500 font-medium mt-1.5">
+                                <HouseIcon className="w-3 h-3 mt-0.5 shrink-0 text-gray-400" />
+                                <span>{donor.address} {donor.distance !== '?' && <span className="text-gray-400 ml-0.5">({donor.distance} km)</span>}</span>
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:flex sm:flex-col gap-2 shrink-0 w-full sm:w-32 mt-2 sm:mt-0">
+                             <a href={`tel:+880${String(donor.phone || '').replace(/\D/g, '')}`} className="flex items-center justify-center gap-1.5 bg-white hover:bg-gray-50 py-3 rounded-xl border border-gray-100 transition-all font-bold text-gray-800 shadow-sm text-xs active:scale-95">
+                               <Phone className="w-3.5 h-3.5 text-red-500" /> Call
+                             </a>
+                             <a href={`https://wa.me/880${String(donor.phone || '').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 py-3 rounded-xl border border-[#25D366]/20 transition-all font-bold text-[#128C7E] shadow-sm text-xs active:scale-95">
+                               WhatsApp
+                             </a>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
+              </div>
+            </div>
           </div>
 
-
+          {/* Sidebar Urgent Feed - Desktop Only */}
+          {isProfileComplete && (
+            <div className="hidden xl:block xl:col-span-4 space-y-8 order-2 sticky top-[100px] h-fit">
+              <section className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm shadow-red-100/50 border border-red-100 relative overflow-hidden">
+                <div className="flex justify-between items-center mb-6 relative z-10">
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900">Live Feed</h3>
+                  </div>
+                  <button 
+                    onClick={() => setIsUrgentModalOpen(true)} className="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-full shadow-sm transition-colors"
+                  >
+                    + Post Need
+                  </button>
+                </div>
+                <div className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+                  {urgentFeed.map(feed => (
+                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} key={feed.id} className="bg-white rounded-2xl p-4 border border-red-50 shadow-sm hover:border-red-100 transition-all">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="bg-red-600 text-white font-black text-[10px] px-2 py-0.5 rounded-md">{feed.bloodGroup}</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                          {feed.timestamp?.toDate() ? (() => {
+                             const diffMs = new Date() - feed.timestamp.toDate();
+                             const diffMins = Math.floor(diffMs / 60000);
+                             if (diffMins < 60) return `${diffMins}M AGO`;
+                             const diffHrs = Math.floor(diffMins / 60);
+                             if (diffHrs < 24) return `${diffHrs}H AGO`;
+                             return `${Math.floor(diffHrs/24)}D AGO`;
+                          })() : 'JUST NOW'}
+                        </span>
+                      </div>
+                      <h5 className="text-sm font-bold text-gray-900 mb-1">{feed.name}</h5>
+                      <p className="text-[11px] font-semibold text-gray-500 flex items-start gap-1 pb-3">
+                        <MapPin className="w-3 h-3 mt-0.5 shrink-0 text-red-500"/> {feed.location}
+                      </p>
+                      <a href={`tel:+880${String(feed.phone || '').replace(/\D/g, '')}`} className="w-full text-center text-[11px] font-black text-white bg-red-500 hover:bg-red-600 py-3 rounded-xl transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2">
+                        <Phone className="w-3.5 h-3.5"/> Call Now
+                      </a>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          )}
         </div>
-
       </main>
 
-      {/* Floating Action Button */}
+      {/* FAB */}
       {isProfileComplete && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-4 pointer-events-none z-40 flex justify-end">
-          <button
-            onClick={() => setIsUrgentModalOpen(true)}
-            className="pointer-events-auto bg-red-600 text-white p-4 rounded-full shadow-xl shadow-red-200/50 hover:bg-red-700 hover:scale-105 transition-all flex items-center justify-center animate-bounce duration-1000"
-            aria-label="Post Urgent Request"
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-5xl px-6 pointer-events-none z-40 flex justify-end">
+          <motion.button 
+            onClick={() => setIsUrgentModalOpen(true)} 
+            animate={{ y: [0, -15, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="pointer-events-auto bg-red-600 text-white p-5 rounded-full shadow-2xl shadow-red-500/50 hover:bg-red-700 transition-all group"
           >
-            <Droplet className="w-6 h-6" />
-          </button>
+            <Droplet className="w-7 h-7" />
+          </motion.button>
         </div>
       )}
 
       {/* Footer */}
-      <footer className="max-w-md mx-auto px-4 py-8 mb-4 text-center text-sm text-gray-500">
+      <footer className="max-w-md mx-auto px-4 py-12 mb-4 text-center text-sm text-gray-500">
         Created By <a href="https://www.linkedin.com/in/sma-rashik/" target="_blank" rel="noopener noreferrer" className="font-semibold text-red-600 hover:underline transition-colors">S M Abdul Rashik</a>
       </footer>
 
-      {/* Urgent Request Modal */}
+      {/* Modals */}
       {isUrgentModalOpen && currentUser && (
-        <UrgentRequestModal 
-          onClose={() => setIsUrgentModalOpen(false)}
-          currentUser={currentUser}
-        />
+        <UrgentRequestModal onClose={() => setIsUrgentModalOpen(false)} currentUser={currentUser} />
       )}
-
-      {/* History Modal */}
       {isHistoryOpen && (
-        <MyRequestHistoryModal 
-          onClose={() => setIsHistoryOpen(false)}
-          userHistory={userHistory}
-        />
+        <MyRequestHistoryModal onClose={() => setIsHistoryOpen(false)} userHistory={userHistory} />
       )}
-
-      {/* Profile Modal */}
       {isProfileOpen && (
-        <ProfileModal 
-          onClose={() => {
-            setIsProfileOpen(false);
-            loadProfile(); // Reload the profile to check if phone was updated
-          }} 
-        />
+        <ProfileModal onClose={() => { setIsProfileOpen(false); loadProfile(); }} />
       )}
-
-      {/* Full Screen Map Modal */}
       {isMapOpen && userLocation && (
-        <MapModal 
-          onClose={() => setIsMapOpen(false)}
-          centerPosition={userLocation}
-          displayedDonors={displayedDonors}
-        />
+        <MapModal onClose={() => setIsMapOpen(false)} centerPosition={userLocation} displayedDonors={displayedDonors} />
       )}
     </div>
   );
